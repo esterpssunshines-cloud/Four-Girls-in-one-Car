@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zebra Puzzle: Four Girls in a Car</title>
+<style>
+:root{--bg:#fdf6f0;--card:#ffffff;--text:#2b2530;--muted:#6b6272;--accent:#d6457a;--line:#eadfe6;--ok:#1f8a4c;--bad:#c0392b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1820;--card:#27222d;--text:#f2ecf5;--muted:#b3a8bb;--accent:#ff7aa8;--line:#3b3342;--ok:#5fd68c;--bad:#ff8a7a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1820;--card:#27222d;--text:#f2ecf5;--muted:#b3a8bb;--accent:#ff7aa8;--line:#3b3342;--ok:#5fd68c;--bad:#ff8a7a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:0 0 4px;color:var(--accent)}
+h2{font-size:1.1rem;margin:24px 0 8px}
+p{margin:6px 0}
+.muted{color:var(--muted);font-size:.95rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+ol{padding-left:22px;margin:0}
+li{margin:8px 0}
+b.prep{color:var(--accent)}
+.car{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.seat{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+.seat h3{margin:0 0 6px;font-size:.95rem;color:var(--muted)}
+.seat label{display:block;font-size:.8rem;color:var(--muted);margin-top:6px}
+select{width:100%;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1rem}
+.seat.ok{border-color:var(--ok)}
+.seat.bad{border-color:var(--bad)}
+.front{text-align:center;font-size:.85rem;color:var(--muted);margin-top:14px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{padding:10px 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:1rem;cursor:pointer}
+button.alt{background:transparent;color:var(--accent)}
+#msg{margin-top:12px;font-weight:600}
+@media (max-width:480px){.car{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>🚗 Four Girls in a Car</h1>
+<p class="muted">Zebra puzzle · Easy level · Prepositions of place</p>
+
+<h2>The story</h2>
+<div class="card">
+<p>Four girls are going on a road trip. Each girl has <b>one thing in her hand</b> and <b>one thing in her bag</b>. Find out who is who!</p>
+<p class="muted"><b>Names:</b> Mia, Zoe, Lily, Ruby<br>
+<b>In her hand:</b> a phone, a sandwich, a water bottle, a map<br>
+<b>In her bag:</b> a book, an umbrella, a camera, a hat</p>
+<p class="muted">“In front of” and “behind” mean directly in front or directly behind (same side of the car).</p>
+</div>
+
+<h2>The clues</h2>
+<div class="card">
+<ol>
+<li>Mia is sitting <b class="prep">in</b> the front, <b class="prep">on</b> the left.</li>
+<li>Zoe is sitting <b class="prep">next to</b> Mia.</li>
+<li>Lily is sitting <b class="prep">behind</b> Mia.</li>
+<li>The girl with the phone <b class="prep">in</b> her hand is sitting <b class="prep">in front of</b> the girl with the water bottle <b class="prep">in</b> her hand.</li>
+<li>The sandwich is <b class="prep">in</b> the hand of the girl sitting <b class="prep">next to</b> Mia.</li>
+<li>The camera is <b class="prep">in</b> the bag of the girl sitting <b class="prep">behind</b> Zoe.</li>
+<li>The girl with the umbrella <b class="prep">in</b> her bag is sitting <b class="prep">next to</b> the girl with the phone <b class="prep">in</b> her hand.</li>
+<li>The book is <b class="prep">in</b> the bag of the girl sitting <b class="prep">in front of</b> Lily.</li>
+</ol>
+</div>
+
+<h2>Your answer</h2>
+<div class="front">⬆ FRONT OF THE CAR ⬆</div>
+<div class="car" id="car"></div>
+<div class="btns">
+<button id="check">Check answers</button>
+<button class="alt" id="reset">Reset</button>
+<button class="alt" id="show">Show solution</button>
+</div>
+<div id="msg" role="status"></div>
+</main>
+
+<script>
+var names=["Mia","Zoe","Lily","Ruby"];
+var hands=["a phone","a sandwich","a water bottle","a map"];
+var bags=["a book","an umbrella","a camera","a hat"];
+var seats=["Front, left","Front, right","Back, left","Back, right"];
+var solution=[
+{n:"Mia",h:"a phone",b:"a book"},
+{n:"Zoe",h:"a sandwich",b:"an umbrella"},
+{n:"Lily",h:"a water bottle",b:"a hat"},
+{n:"Ruby",h:"a map",b:"a camera"}
+];
+var car=document.getElementById("car");
+function makeSelect(id,label,opts){
+  return '<label for="'+id+'">'+label+'</label><select id="'+id+'"><option value="">Choose…</option>'+
+    opts.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select>';
+}
+seats.forEach(function(s,i){
+  var d=document.createElement("div");
+  d.className="seat";d.id="seat"+i;
+  d.innerHTML='<h3>'+s+'</h3>'+makeSelect("n"+i,"Name",names)+makeSelect("h"+i,"In her hand",hands)+makeSelect("b"+i,"In her bag",bags);
+  car.appendChild(d);
+});
+function val(id){return document.getElementById(id).value;}
+document.getElementById("check").onclick=function(){
+  var right=0,filled=true;
+  solution.forEach(function(s,i){
+    var el=document.getElementById("seat"+i);
+    var a=val("n"+i),b=val("h"+i),c=val("b"+i);
+    if(!a||!b||!c){filled=false;}
+    var ok=(a===s.n&&b===s.h&&c===s.b);
+    el.className="seat "+(a&&b&&c?(ok?"ok":"bad"):"");
+    if(ok)right++;
+  });
+  var m=document.getElementById("msg");
+  if(!filled){m.textContent="Fill in every box first.";m.style.color="var(--muted)";}
+  else if(right===4){m.textContent="🎉 Perfect! All four girls are correct!";m.style.color="var(--ok)";}
+  else{m.textContent=right+" of 4 seats are correct. Check the red ones again!";m.style.color="var(--bad)";}
+};
+document.getElementById("reset").onclick=function(){
+  document.querySelectorAll("select").forEach(function(s){s.value="";});
+  document.querySelectorAll(".seat").forEach(function(s){s.className="seat";});
+  document.getElementById("msg").textContent="";
+};
+document.getElementById("show").onclick=function(){
+  solution.forEach(function(s,i){
+    document.getElementById("n"+i).value=s.n;
+    document.getElementById("h"+i).value=s.h;
+    document.getElementById("b"+i).value=s.b;
+    document.getElementById("seat"+i).className="seat ok";
+  });
+  document.getElementById("msg").textContent="";
+};
+</script>
+</body>
+</html>
